@@ -1,0 +1,75 @@
+Docker y Go
+Crear y compilar aplicaciones de Go con Docker
+31 Aug 2018
+Tags: golang, docker, devops, deploy
+
+Ider Delzo
+Software Developer, XAPO
+soloidx@gmail.com
+@soloidx
+
+* Introducción a Docker:
+Docker es una aplicación / utilidad que nos permite tener instancias virtuales muy ligeras como si se trataran de maquinas virtuales
+
+.image ./img/docker.png _ 400
+.caption image by [[http://blog.docker.com]]
+
+* Nuestro ejemplo de aplicación de docker
+
+.code ./snippets/create_project.sh /START OMIT/,/END OMIT/
+
+* Nuestro ejemplo de aplicación de Go:
+
+.code ../main.go
+
+* Iniciando nuestra instancia de Docker:
+
+- Agreagamos un archivo Dockerfile al proyecto
+
+  touch Dockerfile
+
+- Contenido del archivo Dockerfile:
+.code ../Dockerfile
+
+* Compilando y probando:
+
+- Compilando la imagen:
+
+  docker build -t golang_test .
+
+- Revisando si esxiste la imagen
+
+  docker images | grep golang_test
+
+- Iniciando una instancia con la imagen
+  docker run --rm -p 8000:8000 test_golang
+
+* Gracias!
+* ...
+* Ok no...
+
+* Optimizando la imagen para deployment:
+
+Si revisamos el peso de la imagen que hemos creado podemos darnos cuenta que pesa alrededor de 700MB!, como Go es un lenguaje "compilado" podemos extraer el ejecutable y crear una _microimagen_:
+
+- Compilamos la imagen y generamos un build (y lo extraemos con volumenes):
+
+  docker build -t golang_test .
+
+- Corremos la imagen y obtenemos el ejecutable:
+
+  docker run --rm -v `pwd`/build:/build -it test_golang bash -c "cp main /build/."
+
+- Creamos un Dockerfile con la microimagen y el ejecutable:
+
+.code ../Dockerfile.deploy
+
+* Optimizando la imagen para deployment:
+
+- Creamos un build usando el ejecutable generado:
+
+  docker build -t test2_golang -f Dockerfile.deploy .                        
+
+- Iniciamos la nueva imagen de docker:
+
+  docker run -p 8000:8000 test2_golang
